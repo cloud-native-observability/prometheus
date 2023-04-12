@@ -118,7 +118,7 @@ type RulesRetriever interface {
 
 type StatsRenderer func(context.Context, *stats.Statistics, string) stats.QueryStats
 
-func defaultStatsRenderer(ctx context.Context, s *stats.Statistics, param string) stats.QueryStats {
+func defaultStatsRenderer(_ context.Context, s *stats.Statistics, param string) stats.QueryStats {
 	if param != "" {
 		return stats.NewQueryStats(s)
 	}
@@ -392,7 +392,7 @@ func invalidParamError(err error, parameter string) apiFuncResult {
 	}, nil, nil}
 }
 
-func (api *API) options(r *http.Request) apiFuncResult {
+func (api *API) options(*http.Request) apiFuncResult {
 	return apiFuncResult{nil, nil, nil, nil}
 }
 
@@ -1565,7 +1565,7 @@ func (api *API) snapshot(r *http.Request) apiFuncResult {
 	}{name}, nil, nil, nil}
 }
 
-func (api *API) cleanTombstones(r *http.Request) apiFuncResult {
+func (api *API) cleanTombstones(*http.Request) apiFuncResult {
 	if !api.enableAdmin {
 		return apiFuncResult{nil, &apiError{errorUnavailable, errors.New("admin APIs disabled")}, nil, nil}
 	}
@@ -1779,7 +1779,7 @@ func marshalSeriesJSON(ptr unsafe.Pointer, stream *jsoniter.Stream) {
 	stream.WriteObjectEnd()
 }
 
-func marshalSeriesJSONIsEmpty(ptr unsafe.Pointer) bool {
+func marshalSeriesJSONIsEmpty(unsafe.Pointer) bool {
 	return false
 }
 
@@ -1824,7 +1824,7 @@ func marshalSampleJSON(ptr unsafe.Pointer, stream *jsoniter.Stream) {
 	stream.WriteObjectEnd()
 }
 
-func marshalSampleJSONIsEmpty(ptr unsafe.Pointer) bool {
+func marshalSampleJSONIsEmpty(unsafe.Pointer) bool {
 	return false
 }
 
@@ -1842,7 +1842,7 @@ func marshalPointJSON(ptr unsafe.Pointer, stream *jsoniter.Stream) {
 	stream.WriteArrayEnd()
 }
 
-func marshalPointJSONIsEmpty(ptr unsafe.Pointer) bool {
+func marshalPointJSONIsEmpty(unsafe.Pointer) bool {
 	return false
 }
 
@@ -1951,6 +1951,6 @@ func marshalExemplarJSON(ptr unsafe.Pointer, stream *jsoniter.Stream) {
 	stream.WriteObjectEnd()
 }
 
-func marshalExemplarJSONEmpty(ptr unsafe.Pointer) bool {
+func marshalExemplarJSONEmpty(unsafe.Pointer) bool {
 	return false
 }
