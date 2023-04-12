@@ -270,14 +270,15 @@ var errUnexpected = errors.New("unexpected error")
 // recover is the handler that turns panics into returns from the top level of Parse.
 func (p *parser) recover(errp *error) {
 	e := recover()
-	if _, ok := e.(runtime.Error); ok {
+	switch _, ok := e.(runtime.Error); {
+	case ok:
 		// Print the stack trace but do not inhibit the running application.
 		buf := make([]byte, 64<<10)
 		buf = buf[:runtime.Stack(buf, false)]
 
 		fmt.Fprintf(os.Stderr, "parser panic: %v\n%s", e, buf)
 		*errp = errUnexpected
-	} else if e != nil {
+	case e != nil:
 		*errp = e.(error)
 	}
 }
@@ -708,9 +709,10 @@ func (p *parser) addOffset(e Node, offset time.Duration) {
 	}
 
 	// it is already ensured by parseDuration func that there never will be a zero offset modifier
-	if *orgoffsetp != 0 {
+	switch {
+	case *orgoffsetp != 0:
 		p.addParseErrf(e.PositionRange(), "offset may not be set multiple times")
-	} else if orgoffsetp != nil {
+	case orgoffsetp != nil:
 		*orgoffsetp = offset
 	}
 

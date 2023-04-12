@@ -385,22 +385,22 @@ func TestFederationWithNativeHistograms(t *testing.T) {
 			break
 		}
 		require.NoError(t, err)
-		if et == textparse.EntryHelp {
-			metricFamilies++
-		}
 		if et == textparse.EntryHistogram || et == textparse.EntrySeries {
 			l := labels.Labels{}
 			p.Metric(&l)
 			actVec = append(actVec, promql.Sample{Metric: l})
 		}
-		if et == textparse.EntryHistogram {
+		switch et {
+		case textparse.EntryHelp:
+			metricFamilies++
+		case textparse.EntryHistogram:
 			_, parsedTimestamp, h, fh := p.Histogram()
 			require.Nil(t, h)
 			actVec[len(actVec)-1].Point = promql.Point{
 				T: *parsedTimestamp,
 				H: fh,
 			}
-		} else if et == textparse.EntrySeries {
+		case textparse.EntrySeries:
 			_, parsedTimestamp, v := p.Series()
 			actVec[len(actVec)-1].Point = promql.Point{
 				T: *parsedTimestamp,

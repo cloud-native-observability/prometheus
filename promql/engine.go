@@ -1968,13 +1968,13 @@ func (ev *evaluator) VectorAnd(lhs, rhs Vector, matching *parser.VectorMatching,
 }
 
 func (ev *evaluator) VectorOr(lhs, rhs Vector, matching *parser.VectorMatching, lhsh, rhsh []EvalSeriesHelper, enh *EvalNodeHelper) Vector {
-	if matching.Card != parser.CardManyToMany {
+	switch {
+	case matching.Card != parser.CardManyToMany:
 		panic("set operations must only use many-to-many matching")
-	}
-	if len(lhs) == 0 { // Short-circuit.
+	case len(lhs) == 0: // Short-circuit.
 		enh.Out = append(enh.Out, rhs...)
 		return enh.Out
-	} else if len(rhs) == 0 {
+	case len(rhs) == 0:
 		enh.Out = append(enh.Out, lhs...)
 		return enh.Out
 	}
@@ -2093,13 +2093,14 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 			hl, hr = hr, hl
 		}
 		value, histogramValue, keep := vectorElemBinop(op, vl, vr, hl, hr)
-		if returnBool {
+		switch {
+		case returnBool:
 			if keep {
 				value = 1.0
 			} else {
 				value = 0.0
 			}
-		} else if !keep {
+		case !keep:
 			continue
 		}
 		metric := resultMetric(ls.Metric, rs.Metric, op, matching, enh)
@@ -2385,14 +2386,15 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 		if !ok {
 			var m labels.Labels
 			enh.resetBuilder(metric)
-			if without {
+			switch {
+			case without:
 				enh.lb.Del(grouping...)
 				enh.lb.Del(labels.MetricName)
 				m = enh.lb.Labels()
-			} else if len(grouping) > 0 {
+			case len(grouping) > 0:
 				enh.lb.Keep(grouping...)
 				m = enh.lb.Labels()
-			} else {
+			default:
 				m = labels.EmptyLabels()
 			}
 			newAgg := &groupedAggregation{
@@ -2401,9 +2403,10 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 				mean:       s.V,
 				groupCount: 1,
 			}
-			if s.H == nil {
+			switch {
+			case s.H == nil:
 				newAgg.hasFloat = true
-			} else if op == parser.SUM {
+			case op == parser.SUM:
 				newAgg.histogramValue = s.H.Copy()
 				newAgg.hasHistogram = true
 			}
@@ -2413,9 +2416,10 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 
 			inputVecLen := int64(len(vec))
 			resultSize := k
-			if k > inputVecLen {
+			switch {
+			case k > inputVecLen:
 				resultSize = inputVecLen
-			} else if k == 0 {
+			case k == 0:
 				resultSize = 1
 			}
 			switch op {
@@ -2508,12 +2512,13 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 
 		case parser.TOPK:
 			// We build a heap of up to k elements, with the smallest element at heap[0].
-			if int64(len(group.heap)) < k {
+			switch {
+			case int64(len(group.heap)) < k:
 				heap.Push(&group.heap, &Sample{
 					Point:  Point{V: s.V},
 					Metric: s.Metric,
 				})
-			} else if group.heap[0].V < s.V || (math.IsNaN(group.heap[0].V) && !math.IsNaN(s.V)) {
+			case group.heap[0].V < s.V || (math.IsNaN(group.heap[0].V) && !math.IsNaN(s.V)):
 				// This new element is bigger than the previous smallest element - overwrite that.
 				group.heap[0] = Sample{
 					Point:  Point{V: s.V},
@@ -2526,12 +2531,13 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 
 		case parser.BOTTOMK:
 			// We build a heap of up to k elements, with the biggest element at heap[0].
-			if int64(len(group.reverseHeap)) < k {
+			switch {
+			case int64(len(group.reverseHeap)) < k:
 				heap.Push(&group.reverseHeap, &Sample{
 					Point:  Point{V: s.V},
 					Metric: s.Metric,
 				})
-			} else if group.reverseHeap[0].V > s.V || (math.IsNaN(group.reverseHeap[0].V) && !math.IsNaN(s.V)) {
+			case group.reverseHeap[0].V > s.V || (math.IsNaN(group.reverseHeap[0].V) && !math.IsNaN(s.V)):
 				// This new element is smaller than the previous biggest element - overwrite that.
 				group.reverseHeap[0] = Sample{
 					Point:  Point{V: s.V},
@@ -2689,9 +2695,10 @@ func PreprocessExpr(expr parser.Expr, start, end time.Time) parser.Expr {
 func preprocessExprHelper(expr parser.Expr, start, end time.Time) bool {
 	switch n := expr.(type) {
 	case *parser.VectorSelector:
-		if n.StartOrEnd == parser.START {
+		switch n.StartOrEnd {
+		case parser.START:
 			n.Timestamp = makeInt64Pointer(timestamp.FromTime(start))
-		} else if n.StartOrEnd == parser.END {
+		case parser.END:
 			n.Timestamp = makeInt64Pointer(timestamp.FromTime(end))
 		}
 		return n.Timestamp != nil
@@ -2748,9 +2755,10 @@ func preprocessExprHelper(expr parser.Expr, start, end time.Time) bool {
 		if isInvariant {
 			n.Expr = newStepInvariantExpr(n.Expr)
 		}
-		if n.StartOrEnd == parser.START {
+		switch n.StartOrEnd {
+		case parser.START:
 			n.Timestamp = makeInt64Pointer(timestamp.FromTime(start))
-		} else if n.StartOrEnd == parser.END {
+		case parser.END:
 			n.Timestamp = makeInt64Pointer(timestamp.FromTime(end))
 		}
 		return n.Timestamp != nil
